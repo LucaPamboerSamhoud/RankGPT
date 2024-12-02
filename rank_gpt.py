@@ -231,7 +231,7 @@ def permutation_pipeline(role="an intelligent assistant that can rank passages b
     return item
 
 
-def sliding_windows(qitem=None, role="an intelligent assistant that can rank passages based on their relevancy to the query", rank_start=0, rank_end=100, window_size=20, step=10, model_name='gpt-3.5-turbo',
+def sliding_windows(item=None, role="an intelligent assistant that can rank passages based on their relevancy to the query", rank_start=0, rank_end=100, window_size=20, step=10, model_name='gpt-3.5-turbo',
                     api_key=None):
     item = copy.deepcopy(item)
     end_pos = rank_end
