@@ -140,9 +140,9 @@ def run_retriever(topics, searcher, qrels=None, k=100, qid=None):
     return ranks
 
 
-def get_prefix_prompt(query, num):
+def get_prefix_prompt(query, num, role):
     return [{'role': 'system',
-             'content': "You are RankGPT, an intelligent assistant that can rank passages based on their relevancy to the query."},
+             'content': f"You are RankGPT, {role}."},
             {'role': 'user',
              'content': f"I will provide you with {num} passages, each indicated by number identifier []. \nRank the passages based on their relevance to query: {query}."},
             {'role': 'assistant', 'content': 'Okay, please provide the passages.'}]
@@ -152,13 +152,13 @@ def get_post_prompt(query, num):
     return f"Search Query: {query}. \nRank the {num} passages above based on their relevance to the search query. The passages should be listed in descending order using identifiers. The most relevant passages should be listed first. The output format should be [] > [], e.g., [1] > [2]. Only response the ranking results, do not say any word or explain."
 
 
-def create_permutation_instruction(item=None, rank_start=0, rank_end=100, model_name='gpt-3.5-turbo'):
+def create_permutation_instruction(role="an intelligent assistant that can rank passages based on their relevancy to the query", item=None, rank_start=0, rank_end=100, model_name='gpt-3.5-turbo'):
     query = item['query']
     num = len(item['hits'][rank_start: rank_end])
 
     max_length = 300
 
-    messages = get_prefix_prompt(query, num)
+    messages = get_prefix_prompt(query, num, role)
     rank = 0
     for hit in item['hits'][rank_start: rank_end]:
         rank += 1
@@ -223,22 +223,22 @@ def receive_permutation(item, permutation, rank_start=0, rank_end=100):
     return item
 
 
-def permutation_pipeline(item=None, rank_start=0, rank_end=100, model_name='gpt-3.5-turbo', api_key=None):
-    messages = create_permutation_instruction(item=item, rank_start=rank_start, rank_end=rank_end,
+def permutation_pipeline(role="an intelligent assistant that can rank passages based on their relevancy to the query", item=None, rank_start=0, rank_end=100, model_name='gpt-3.5-turbo', api_key=None):
+    messages = create_permutation_instruction(role =role, item=item, rank_start=rank_start, rank_end=rank_end,
                                               model_name=model_name)  # chan
     permutation = run_llm(messages, api_key=api_key, model_name=model_name)
     item = receive_permutation(item, permutation, rank_start=rank_start, rank_end=rank_end)
     return item
 
 
-def sliding_windows(item=None, rank_start=0, rank_end=100, window_size=20, step=10, model_name='gpt-3.5-turbo',
+def sliding_windows(qitem=None, role="an intelligent assistant that can rank passages based on their relevancy to the query", rank_start=0, rank_end=100, window_size=20, step=10, model_name='gpt-3.5-turbo',
                     api_key=None):
     item = copy.deepcopy(item)
     end_pos = rank_end
     start_pos = rank_end - window_size
     while start_pos >= rank_start:
         start_pos = max(start_pos, rank_start)
-        item = permutation_pipeline(item, start_pos, end_pos, model_name=model_name, api_key=api_key)
+        item = permutation_pipeline(role, item, start_pos, end_pos, model_name=model_name, api_key=api_key)
         end_pos = end_pos - step
         start_pos = start_pos - step
     return item
