@@ -1,0 +1,4 @@
+,comparison,abs_diff,p_value,p<0.05
+0,Baseline vs One Role,0.0028719988951713127,0.25,False
+1,One Role vs Specific Roles,0.008505178951002335,0.5,False
+2,Baseline vs Specific Roles,0.005633180055831022,0.5,False
